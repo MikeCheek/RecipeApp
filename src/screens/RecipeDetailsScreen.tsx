@@ -1,4 +1,4 @@
-import {StatusBar, Text, TouchableOpacity, View} from 'react-native';
+import {Linking, StatusBar, Text, TouchableOpacity, View} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {RecipeDetailsScreenProps} from 'navigation/types';
 import {
@@ -23,6 +23,7 @@ import IconButton from 'components/IconButton';
 import {getRecipeDetails, likeRecipe, unlikeRecipe} from 'helpers/db';
 import useUserContext from 'helpers/useUserContext';
 import Ingredient from 'components/Ingredient';
+import {colors} from 'theme';
 
 const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
   const {id, image, name} = route.params;
@@ -200,7 +201,29 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
             <Text style={{fontSize: hp(1.8)}} className="text-neutral-700">
               {recipeDetails.instructions ?? 'No instructions'}
             </Text>
+            {recipeDetails.link ? (
+              <View className="flex items-start justify-start">
+                <Text
+                  style={{fontSize: hp(1.7)}}
+                  className="font-bold flex-1 text-neutral-700 mt-4">
+                  Link
+                </Text>
+                <TouchableOpacity
+                  onPress={() => Linking.openURL(recipeDetails.link ?? '')}>
+                  <Text
+                    style={{
+                      fontSize: hp(1.8),
+                      color: colors.secondaryCta,
+                      // borderBottomWidth: 2,
+                      borderColor: colors.secondaryCta,
+                    }}>
+                    {recipeDetails.link}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
           </Animated.View>
+
           {recipeDetails.youtube ? (
             <Animated.View
               entering={FadeInDown.delay(400)

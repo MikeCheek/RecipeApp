@@ -42,11 +42,12 @@ const RecipeBadge = ({
         ) : (
           <Text
             style={{fontSize: hp(2)}}
-            className="font-bold text-neutral-700">
+            className={`font-bold ${
+              title ? 'text-neutral-700' : 'text-neutral-500'
+            }`}>
             {title ?? '?'}
           </Text>
         )}
-
         <Text
           style={{fontSize: hp(1.3)}}
           className="font-bold text-neutral-700">

@@ -46,6 +46,7 @@ const AddScreen = () => {
   const [info, setInfo] = useState<RecipeInfo>({});
   const [instructions, setInstructions] = useState<string>('');
   const [ingredients, setIngredients] = useState<string[]>(['']);
+  const [link, setLink] = useState<string>('');
   const [youtube, setYoutube] = useState<string>('');
   const [image, setImage] = useState<{
     image: string | undefined;
@@ -106,6 +107,7 @@ const AddScreen = () => {
           info: info,
           ingredients: ingredients,
           datetime: new Date(Date.now()).getTime(),
+          link: link,
         },
         image,
       );
@@ -188,43 +190,52 @@ const AddScreen = () => {
         </Animated.View>
         <Animated.View
           entering={FadeInDown.delay(200).duration(700).springify().damping(12)}
-          className="flex-row justify-around">
-          <RecipeBadge
-            title={info.minutes}
-            setTitle={(title: string) => setInfo(i => ({...i, minutes: title}))}
-            description="Minutes"
-            icon={<ClockIcon size={hp(4)} strokeWidth={2.5} color="#525252" />}
-          />
-          <RecipeBadge
-            title={info.servings}
-            setTitle={(title: string) =>
-              setInfo(i => ({...i, servings: title}))
-            }
-            description="Servings"
-            icon={<UsersIcon size={hp(4)} strokeWidth={2.5} color="#525252" />}
-          />
-          <RecipeBadge
-            title={info.calories}
-            setTitle={(title: string) =>
-              setInfo(i => ({...i, calories: title}))
-            }
-            description="Calories"
-            icon={<FireIcon size={hp(4)} strokeWidth={2.5} color="#525252" />}
-          />
-          <RecipeBadge
-            title={info.difficulty}
-            setTitle={(title: string) =>
-              setInfo(i => ({...i, difficulty: title}))
-            }
-            description="Difficulty"
-            icon={
-              <Square3Stack3DIcon
-                size={hp(4)}
-                strokeWidth={2.5}
-                color="#525252"
-              />
-            }
-          />
+          className="flex-col justify-around">
+          <Text className={`${colors.heading} text-lg font-bold`}>Info</Text>
+          <View className="flex-row justify-around">
+            <RecipeBadge
+              title={info.minutes}
+              setTitle={(title: string) =>
+                setInfo(i => ({...i, minutes: title}))
+              }
+              description="Minutes"
+              icon={
+                <ClockIcon size={hp(4)} strokeWidth={2.5} color="#525252" />
+              }
+            />
+            <RecipeBadge
+              title={info.servings}
+              setTitle={(title: string) =>
+                setInfo(i => ({...i, servings: title}))
+              }
+              description="Servings"
+              icon={
+                <UsersIcon size={hp(4)} strokeWidth={2.5} color="#525252" />
+              }
+            />
+            <RecipeBadge
+              title={info.calories}
+              setTitle={(title: string) =>
+                setInfo(i => ({...i, calories: title}))
+              }
+              description="Calories"
+              icon={<FireIcon size={hp(4)} strokeWidth={2.5} color="#525252" />}
+            />
+            <RecipeBadge
+              title={info.difficulty}
+              setTitle={(title: string) =>
+                setInfo(i => ({...i, difficulty: title}))
+              }
+              description="Difficulty"
+              icon={
+                <Square3Stack3DIcon
+                  size={hp(4)}
+                  strokeWidth={2.5}
+                  color="#525252"
+                />
+              }
+            />
+          </View>
         </Animated.View>
         <Animated.View
           entering={FadeInDown.delay(300).duration(700).springify().damping(12)}
@@ -273,11 +284,16 @@ const AddScreen = () => {
             onChangeText={setInstructions}
           />
         </Animated.View>
-        <Animated.View
-          entering={FadeInDown.delay(500)
-            .duration(700)
-            .springify()
-            .damping(12)}>
+        <View>
+          <CustomTextInput
+            text="Link (Optional)"
+            value={link}
+            onChangeText={setLink}
+            keyboardType="url"
+            autoComplete="url"
+          />
+        </View>
+        <View>
           <CustomTextInput
             text="Youtube video (Optional)"
             value={youtube}
@@ -285,7 +301,7 @@ const AddScreen = () => {
             keyboardType="url"
             autoComplete="url"
           />
-        </Animated.View>
+        </View>
       </View>
       <TouchableOpacity
         style={{backgroundColor: colors.cta}}

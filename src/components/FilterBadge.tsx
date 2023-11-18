@@ -20,7 +20,7 @@ const FilterBadge = ({text, action, active}: FilterBadgeProps) => {
       className="bg-black/10 rounded-full flex flex-row space-x-2 items-center justify-center px-2 py-px my-auto mr-2"
       style={active ? {backgroundColor: colors.cta} : {}}>
       <Text
-        className={active ? 'text-white' : 'text-black'}
+        className={active ? 'text-white' : 'text-black px-2'}
         style={{fontSize: hp(1.8)}}>
         {text}
       </Text>

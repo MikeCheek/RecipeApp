@@ -60,6 +60,7 @@ export type RecipeDetails = {
   instructions: string;
   tags?: string;
   youtube: string;
+  link?: string;
   info?: RecipeInfo;
   ingredients?: string[];
   source?: string | null;

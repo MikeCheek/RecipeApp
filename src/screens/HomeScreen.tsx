@@ -67,8 +67,8 @@ const HomeScreen = () => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{paddingBottom: 80}}
-        className="space-y-6 pt-14">
-        <View className="absolute top-0 right-0 mx-4 flex-row justify-between items-center mb-2">
+        className="space-y-6 pt-8">
+        <View className="absolute top-4 right-0 mx-4 flex-row justify-between items-center mb-2">
           <Image
             source={require('assets/images/avatar.png')}
             style={{height: hp(5), width: hp(5.5)}}
