@@ -21,6 +21,7 @@ import {getRecipes} from 'helpers/db';
 import useUserContext from 'helpers/useUserContext';
 import useCategoryContext from 'helpers/useCategoryContext';
 import {removeDuplicates} from 'helpers/array';
+import NewsBanner from 'components/NewsBanner';
 
 const HomeScreen = () => {
   const [clicked, setClicked] = useState<boolean>();
@@ -62,12 +63,12 @@ const HomeScreen = () => {
   }, [active]);
 
   return (
-    <View className="flex-1 bg-white">
-      <StatusBar barStyle="dark-content" />
+    <View className="flex-1 bg-white relative">
+      <StatusBar barStyle="light-content" />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{paddingBottom: 80}}
-        className="space-y-6 pt-8">
+        className="relative space-y-6 pt-8">
         <View className="absolute top-4 right-0 mx-4 flex-row justify-between items-center mb-2">
           <Image
             source={require('assets/images/avatar.png')}

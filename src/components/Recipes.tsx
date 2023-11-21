@@ -7,13 +7,17 @@ import {
 import {Recipe} from 'types';
 import RecipeCard from './RecipeCard';
 import MasonryList from 'reanimated-masonry-list';
-import {useAppSelector} from 'redux/hooks';
+import {useAppDispatch, useAppSelector} from 'redux/hooks';
 import Loader from './Loader';
 import {useNavigation} from '@react-navigation/native';
 import {Navigation} from 'navigation/types';
 import FilterBadge from './FilterBadge';
 import Areas from './Areas';
 import {removeDuplicates} from 'helpers/array';
+import useCategoryContext from 'helpers/useCategoryContext';
+import {setRecipes, setRecipesLoading} from 'redux/slices/recipes';
+import {getRecipes, removeRecipe} from 'helpers/db';
+import {showMessage} from 'react-native-flash-message';
 
 interface RecipesProps {
   search?: string;
@@ -24,6 +28,8 @@ const Recipes = ({search, removeSearch}: RecipesProps) => {
   const {recipes, recipesLoading} = useAppSelector(state => state.recipes);
   const navigation = useNavigation<Navigation>();
   const [area, setArea] = useState<string>();
+  const dispatch = useAppDispatch();
+  const {active} = useCategoryContext();
 
   const filteredRecipes =
     (search || area) && recipes
@@ -46,6 +52,20 @@ const Recipes = ({search, removeSearch}: RecipesProps) => {
   const areas = recipes
     ? removeDuplicates(recipes.map(r => r.area))
     : undefined;
+
+  const refreshData = () => {
+    dispatch(setRecipesLoading(true));
+    getRecipes(active).then(data => dispatch(setRecipes(data)));
+    dispatch(setRecipesLoading(false));
+  };
+
+  const deleteAction = (id: string) => {
+    removeRecipe(id)
+      .then(() => refreshData())
+      .then(() =>
+        showMessage({message: 'Recipe removed successfully', type: 'success'}),
+      );
+  };
 
   return (
     <View className="mx-4 space-y-3">
@@ -76,6 +96,7 @@ const Recipes = ({search, removeSearch}: RecipesProps) => {
                 item={item as Recipe}
                 index={i}
                 navigation={navigation}
+                deleteAction={deleteAction}
               />
             )}
             // refreshing={isLoadingNext}

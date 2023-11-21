@@ -1,22 +1,22 @@
-import {User} from 'firebase/auth';
+import {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {createContext, useContext} from 'react';
 
 interface IUserContext {
-  user: User | null;
+  user: FirebaseAuthTypes.User | null;
   userLoading: boolean;
   cacheChecked: boolean;
-  // setUser: (user: User) => void;
+  setUser: (user: FirebaseAuthTypes.User | null) => void;
   setUserLoading: (userLoading: boolean) => void;
-  // setCacheChecked: (cacheChecked: boolean) => void;
+  setCacheChecked: (cacheChecked: boolean) => void;
 }
 
 const UserContext = createContext<IUserContext>({
   user: null,
   userLoading: false,
   cacheChecked: false,
-  // setUser: () => null,
+  setUser: () => null,
   setUserLoading: () => null,
-  // setCacheChecked: () => null,
+  setCacheChecked: () => null,
 });
 
 export {UserContext};

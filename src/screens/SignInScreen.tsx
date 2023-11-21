@@ -2,9 +2,6 @@ import {Image, Text, TextInput, TouchableOpacity, View} from 'react-native';
 import React, {useState} from 'react';
 import ScreenWrapper from 'components/ScreenWrapper';
 import {colors} from 'theme';
-import {signInWithEmailAndPassword} from 'firebase/auth';
-import {auth} from 'config/firebase';
-import {FirebaseError} from 'firebase/app';
 import Loader from 'components/Loader';
 import {
   widthPercentageToDP as wp,
@@ -17,6 +14,8 @@ import {ChevronLeftIcon} from 'react-native-heroicons/solid';
 import {useNavigation} from '@react-navigation/native';
 import {Navigation} from 'navigation/types';
 import useUserContext from 'helpers/useUserContext';
+import auth from '@react-native-firebase/auth';
+import CustomButton from 'components/CustomButton';
 
 const SignInScreen = () => {
   const [email, setEmail] = useState<string>('');
@@ -29,10 +28,9 @@ const SignInScreen = () => {
   const submit = () => {
     if (email && password) {
       setUserLoading(true);
-      signInWithEmailAndPassword(auth, email, password)
-        .catch((e: FirebaseError) =>
-          showMessage({message: e.message, type: 'warning'}),
-        )
+      auth()
+        .signInWithEmailAndPassword(email, password)
+        .catch(e => showMessage({message: e.message, type: 'warning'}))
         .finally(() => setUserLoading(false));
     } else {
       showMessage({
@@ -40,6 +38,24 @@ const SignInScreen = () => {
         type: 'warning',
       });
     }
+  };
+
+  const recoverPassword = () => {
+    if (email) {
+      auth()
+        .sendPasswordResetEmail(email)
+        .then(() =>
+          showMessage({
+            message: 'We sent you an email to reset your password',
+            type: 'success',
+          }),
+        )
+        .catch(e => showMessage({message: e.message, type: 'warning'}));
+    } else
+      showMessage({
+        message: 'Email is required!',
+        type: 'warning',
+      });
   };
 
   return (
@@ -65,7 +81,7 @@ const SignInScreen = () => {
             source={require('../assets/images/login.png')}
           />
         </View>
-        <View className="space-y-2 mx-2">
+        <View className="space-y-2 mx-2 flex flex-col">
           <CustomTextInput
             text="Email"
             value={email}
@@ -82,8 +98,16 @@ const SignInScreen = () => {
             onChangeText={setPassword}
             autoComplete="password"
           />
-          <TouchableOpacity className="flex-row justify-end">
-            <Text className={colors.heading}>Forgot Password?</Text>
+          <TouchableOpacity
+            className="ml-auto flex items-end justify-end"
+            onPress={recoverPassword}>
+            <Text
+              style={{
+                color: colors.secondaryCta,
+              }}
+              className="text-end w-1/2">
+              Forgot Password?
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -91,16 +115,7 @@ const SignInScreen = () => {
           {userLoading ? (
             <Loader />
           ) : (
-            <TouchableOpacity
-              style={{backgroundColor: colors.cta}}
-              onPress={submit}
-              className="mt-4 mb-8 rounded-full p-3 shadow-sm mx-2">
-              <Text
-                style={{fontSize: hp(2.5)}}
-                className="text-center text-white font-bold">
-                Sign In
-              </Text>
-            </TouchableOpacity>
+            <CustomButton onPress={submit} text="Sign In" />
           )}
         </View>
       </View>

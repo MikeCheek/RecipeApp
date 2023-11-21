@@ -4,13 +4,19 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
+import {colors} from 'theme';
 
 interface IngredientProps {
   ingredient: string;
   setIngredient?: (text: string) => void;
+  modified?: boolean;
 }
 
-const Ingredient = ({ingredient, setIngredient}: IngredientProps) => {
+const Ingredient = ({
+  ingredient,
+  setIngredient,
+  modified = false,
+}: IngredientProps) => {
   const [name, measure] = ingredient.split(':');
   return (
     <View className="flex flex-row space-x-4 items-center">
@@ -32,12 +38,19 @@ const Ingredient = ({ingredient, setIngredient}: IngredientProps) => {
           <Text
             style={{fontSize: hp(1.8)}}
             className="font-medium text-neutral-600">
-            {name}:{' '}
-            <Text
-              style={{fontSize: hp(1.8)}}
-              className="font-extrabold text-neutral-700">
-              {measure ? measure : ''}{' '}
-            </Text>
+            {name.trim()}
+            {measure ? ': ' : ''}
+            {measure ? (
+              <Text
+                style={{
+                  fontSize: hp(1.8),
+                  color:
+                    modified && measure.match(/\d+/) ? colors.cta : undefined,
+                }}
+                className="font-extrabold text-neutral-700">
+                {measure.trim()}
+              </Text>
+            ) : null}
           </Text>
         )}
       </View>

@@ -38,6 +38,7 @@ import {setRecipes, setRecipesLoading} from 'redux/slices/recipes';
 import {RecipeInfo} from 'types';
 import RecipeBadge from 'components/RecipeBadge';
 import Ingredient from 'components/Ingredient';
+import CustomButton from 'components/CustomButton';
 
 const AddScreen = () => {
   const [name, setName] = useState<string>('');
@@ -61,7 +62,7 @@ const AddScreen = () => {
 
   const refreshData = () => {
     dispatch(setRecipesLoading(true));
-    getRecipes(category).then(data => dispatch(setRecipes(data)));
+    getRecipes(active).then(data => dispatch(setRecipes(data)));
     dispatch(setRecipesLoading(false));
   };
 
@@ -121,6 +122,16 @@ const AddScreen = () => {
       });
   };
 
+  if (user?.isAnonymous)
+    return (
+      <ScreenWrapper className="flex items-center justify-center w-full h-full">
+        <Text
+          style={{color: colors.cta}}
+          className="mx-10 font-extrabold text-2xl text-center">
+          You need to create an account to add recipes
+        </Text>
+      </ScreenWrapper>
+    );
   return (
     <ScreenWrapper
       scrollable
@@ -303,16 +314,7 @@ const AddScreen = () => {
           />
         </View>
       </View>
-      <TouchableOpacity
-        style={{backgroundColor: colors.cta}}
-        onPress={add}
-        className="mt-4 mb-8 rounded-full p-3 shadow-sm mx-2">
-        <Text
-          style={{fontSize: hp(2.5)}}
-          className="text-center text-white font-bold">
-          Add Recipe
-        </Text>
-      </TouchableOpacity>
+      <CustomButton onPress={add} text="Add Recipe" />
     </ScreenWrapper>
   );
 };

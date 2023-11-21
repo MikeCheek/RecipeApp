@@ -2,13 +2,6 @@ import {Image, Text, TouchableOpacity, View} from 'react-native';
 import React, {useState} from 'react';
 import ScreenWrapper from 'components/ScreenWrapper';
 import {colors} from 'theme';
-import {
-  createUserWithEmailAndPassword,
-  sendEmailVerification,
-  updateProfile,
-} from 'firebase/auth';
-import {auth} from 'config/firebase';
-import {FirebaseError} from 'firebase/app';
 import Loader from 'components/Loader';
 import {
   widthPercentageToDP as wp,
@@ -21,6 +14,8 @@ import CustomTextInput from 'components/CustomTextInput';
 import IconButton from 'components/IconButton';
 import {ChevronLeftIcon} from 'react-native-heroicons/solid';
 import useUserContext from 'helpers/useUserContext';
+import auth from '@react-native-firebase/auth';
+import CustomButton from 'components/CustomButton';
 
 const SignUpScreen = () => {
   const [name, setName] = useState<string>('');
@@ -34,14 +29,13 @@ const SignUpScreen = () => {
   const submit = () => {
     if (email && password && name) {
       setUserLoading(true);
-      createUserWithEmailAndPassword(auth, email, password)
+      auth()
+        .createUserWithEmailAndPassword(email, password)
         .then(result => {
-          updateProfile(result.user, {displayName: name});
-          sendEmailVerification(result.user);
+          result.user.updateProfile({displayName: name});
+          result.user.sendEmailVerification();
         })
-        .catch((e: FirebaseError) =>
-          showMessage({message: e.message, type: 'warning'}),
-        )
+        .catch(e => showMessage({message: e.message, type: 'warning'}))
         .finally(() => {
           setUserLoading(false);
           showMessage({
@@ -115,16 +109,7 @@ const SignUpScreen = () => {
           {userLoading ? (
             <Loader />
           ) : (
-            <TouchableOpacity
-              style={{backgroundColor: colors.cta}}
-              onPress={submit}
-              className="mt-4 mb-8 rounded-full p-3 shadow-sm mx-2">
-              <Text
-                style={{fontSize: hp(2.5)}}
-                className="text-center text-white font-bold">
-                Sign Up
-              </Text>
-            </TouchableOpacity>
+            <CustomButton onPress={submit} text="Sign Up" />
           )}
         </View>
       </View>

@@ -13,6 +13,8 @@ import {setRecipes, setRecipesLoading} from 'redux/slices/recipes';
 import {fetchCategories} from 'helpers/fetchers';
 import {getRecipes} from 'helpers/db';
 import useUserContext from 'helpers/useUserContext';
+import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
+import CustomButton from 'components/CustomButton';
 
 const WelcomeScreen = () => {
   const ring1Padding = useSharedValue(0);
@@ -62,6 +64,10 @@ const WelcomeScreen = () => {
     dispatch(setRecipesLoading(false));
   };
 
+  const signInGuest = async () => {
+    await auth().signInAnonymously();
+  };
+
   const fetchData = () => {
     try {
       getCategories().then(
@@ -86,7 +92,7 @@ const WelcomeScreen = () => {
         (ring2Padding.value = withSpring(ring2Padding.value + hp(5.5))), 300
       ),
     );
-    fetchData();
+    fetchData(), 300;
   }, []);
 
   return (
@@ -107,19 +113,18 @@ const WelcomeScreen = () => {
       </Animated.View>
       {cacheChecked && !user ? (
         <View className="flex items-center space-y-2">
-          <TouchableOpacity
+          <CustomButton
             onPress={() => navigation.navigate('SignIn')}
-            className="shadow p-3 w-48 bg-white rounded-full mb-5">
-            <Text className="text-center text-amber-800 text-lg font-bold">
-              Sign In
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
+            text="Sign In"
+            white
+          />
+          <CustomButton
             onPress={() => navigation.navigate('SignUp')}
-            className="shadow p-3 w-48 bg-white rounded-full mb-5">
-            <Text className="text-center text-amber-800 text-lg font-bold">
-              Sign Up
-            </Text>
+            text="Sign Up"
+            white
+          />
+          <TouchableOpacity onPress={signInGuest}>
+            <Text className="text-white">Sign in as a guest</Text>
           </TouchableOpacity>
           {/* <Text
           className="font-bold text-white tracking-widest"

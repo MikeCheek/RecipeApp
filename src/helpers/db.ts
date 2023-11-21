@@ -1,32 +1,20 @@
+import firestore from '@react-native-firebase/firestore';
 import {
+  recipeImageRef,
   recipeImagesRef,
   recipeRef,
   recipesRef,
-  storage,
   userRecipes,
   userRef,
 } from 'config/firebase';
-import {
-  addDoc,
-  arrayRemove,
-  arrayUnion,
-  doc,
-  getDoc,
-  getDocs,
-  query,
-  setDoc,
-  updateDoc,
-  where,
-} from 'firebase/firestore';
-import {getDownloadURL, ref, uploadBytes} from 'firebase/storage';
 import {Recipe, RecipeDetails, User} from 'types';
 
 export const getRecipes = async (category: string) => {
   const q =
     category.toLowerCase() === 'all'
       ? recipesRef
-      : query(recipesRef, where('category', '==', category));
-  const querySnapshot = await getDocs(q);
+      : recipesRef.where('category', '==', category);
+  const querySnapshot = await q.get();
   let docs: Recipe[] = [];
   for (let i = 0; i < querySnapshot.docs.length; i++) {
     const doc = querySnapshot.docs[i];
@@ -38,8 +26,8 @@ export const getRecipes = async (category: string) => {
 };
 
 export const getRecipeDetails = async (recipeId: string) => {
-  const q = query(recipeRef, where('id', '==', recipeId));
-  const querySnapshot = await getDocs(q);
+  const q = recipeRef.where('id', '==', recipeId);
+  const querySnapshot = await q.get();
   const doc = querySnapshot.docs[0];
   const data = {...doc.data(), id: doc.id} as RecipeDetails;
 
@@ -47,8 +35,15 @@ export const getRecipeDetails = async (recipeId: string) => {
 };
 
 export const getUserPreferences = async (userId: string) => {
-  const querySnapshot = await getDocs(userRef(userId));
+  const querySnapshot = await userRef(userId).get();
   return querySnapshot.docs[0].data() as User;
+};
+
+export const removeRecipe = async (id: string) => {
+  await recipeImageRef(id).delete();
+  const recipeId = (await recipesRef.where('id', '==', id).get()).docs[0].id;
+  await recipesRef.doc(recipeId).delete();
+  await recipeRef.doc(id).delete();
 };
 
 export const createRecipe = async (
@@ -67,19 +62,19 @@ export const createRecipe = async (
     category: recipeDetails.category,
     area: recipeDetails.area,
   };
-  const recipeDoc = await addDoc(recipesRef, recipe);
-  const recipeDetailsDoc = await addDoc(recipeRef, {
+  const recipeDoc = await recipesRef.add(recipe);
+  const recipeDetailsDoc = await recipeRef.add({
     ...recipeDetails,
   });
 
   // const blob = await base64toBlob(imageData.image ?? '', imageData.imageType);
-  const res = await fetch(imageData.image ?? '');
-  const blob = await res.blob();
+  // const res = await fetch(imageData.image ?? '');
+  // const blob = await res.blob();
 
-  await uploadBytes(ref(recipeImagesRef, recipeDetailsDoc.id), blob);
-  const url = await getDownloadURL(ref(recipeImagesRef, recipeDetailsDoc.id));
-  await updateDoc(recipeDoc, {id: recipeDetailsDoc.id, image: url});
-  await updateDoc(recipeDetailsDoc, {
+  await recipeImageRef(recipeDetailsDoc.id).putFile(imageData.image ?? '');
+  const url = await recipeImageRef(recipeDetailsDoc.id).getDownloadURL();
+  await recipeDoc.update({id: recipeDetailsDoc.id, image: url});
+  await recipeDetailsDoc.update({
     id: recipeDetailsDoc.id,
     image: url,
   });
@@ -87,21 +82,21 @@ export const createRecipe = async (
 
 export const likeRecipe = async (userId: string, recipeId: string) => {
   const recipesDoc = userRecipes(userId);
-  const snap = await getDoc(recipesDoc);
+  const snap = await recipesDoc.get();
 
-  if (snap.exists())
-    await updateDoc(recipesDoc, {
-      favourites: arrayUnion(recipeId),
+  if (snap.exists)
+    await recipesDoc.update({
+      favourites: firestore.FieldValue.arrayUnion(recipeId),
     });
-  else await setDoc(recipesDoc, {favourites: [recipeId]});
+  else await recipesDoc.set({favourites: [recipeId]});
 };
 
 export const unlikeRecipe = async (userId: string, recipeId: string) => {
   const recipesDoc = userRecipes(userId);
-  const snap = await getDoc(recipesDoc);
+  const snap = await recipesDoc.get();
 
-  if (snap.exists())
-    await updateDoc(recipesDoc, {
-      favourites: arrayRemove(recipeId),
+  if (snap.exists)
+    await recipesDoc.update({
+      favourites: firestore.FieldValue.arrayRemove(recipeId),
     });
 };

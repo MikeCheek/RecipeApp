@@ -12,7 +12,7 @@ import {
   Square3Stack3DIcon,
   UsersIcon,
 } from 'react-native-heroicons/outline';
-import {HeartIcon} from 'react-native-heroicons/solid';
+import {HeartIcon, PencilIcon} from 'react-native-heroicons/solid';
 import {RecipeDetails} from 'types';
 import Loader from 'components/Loader';
 import RecipeBadge from 'components/RecipeBadge';
@@ -32,7 +32,12 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [recipeDetails, setRecipeDetails] = useState<Partial<RecipeDetails>>();
 
+  const [servings, setServings] = useState<number>(0);
+  const [weigthedIngredients, setWeightedIngredients] = useState<string[]>();
   const {user} = useUserContext();
+
+  const imTheAuthor =
+    user && recipeDetails ? user.uid === recipeDetails.author : false;
 
   const handleHeart = () => {
     setFavourite(fav => {
@@ -65,9 +70,48 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
     }
   };
 
+  const updateWeightedIngredients = () => {
+    if (recipeDetails?.ingredients) {
+      let tmp = [];
+      for (let i = 0; i < recipeDetails.ingredients.length; i++) {
+        const [name, others] = recipeDetails.ingredients[i].split(':');
+        if (others) {
+          const values = others.match(/\d+/);
+          const value = values ? Number(values[0]) : null;
+          if (value === null || !recipeDetails.info?.servings)
+            tmp.push(recipeDetails.ingredients[i]);
+          else {
+            const newValue =
+              (value / Number(recipeDetails.info.servings)) * servings;
+            const newIngredient =
+              name +
+              ':' +
+              others.replace(value.toString(), newValue.toString());
+            tmp.push(newIngredient);
+          }
+        } else tmp.push(name);
+      }
+      setWeightedIngredients(tmp);
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (recipeDetails?.info?.servings)
+      setServings(Number(recipeDetails?.info?.servings));
+  }, [recipeDetails]);
+
+  useEffect(() => {
+    if (
+      recipeDetails?.info?.servings &&
+      servings != Number(recipeDetails?.info?.servings)
+    ) {
+      updateWeightedIngredients();
+    } else setWeightedIngredients(undefined);
+  }, [servings]);
 
   return (
     <ScreenWrapper
@@ -79,7 +123,7 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
       <View className="flex-row justify-center">
         <Animated.Image
           source={{uri: image}}
-          sharedTransitionTag={id}
+          sharedTransitionTag={name}
           style={{
             width: wp(98),
             height: hp(50),
@@ -98,15 +142,24 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
           thick
           onPress={() => navigation.goBack()}
         />
-        <TouchableOpacity
-          onPress={handleHeart}
-          className="p-2 rounded-full bg-white">
-          <HeartIcon
-            size={hp(3.5)}
-            strokeWidth={4.5}
-            color={favourite ? 'red' : 'gray'}
-          />
-        </TouchableOpacity>
+        <View className="flex flex-row space-x-2">
+          {imTheAuthor ? (
+            <TouchableOpacity
+              onPress={() => {}}
+              className="p-2 rounded-full bg-white">
+              <PencilIcon size={hp(3.5)} strokeWidth={4.5} color={'gray'} />
+            </TouchableOpacity>
+          ) : null}
+          <TouchableOpacity
+            onPress={handleHeart}
+            className="p-2 rounded-full bg-white">
+            <HeartIcon
+              size={hp(3.5)}
+              strokeWidth={4.5}
+              color={favourite ? 'red' : 'gray'}
+            />
+          </TouchableOpacity>
+        </View>
       </Animated.View>
       {loading ? (
         <Loader />
@@ -169,14 +222,41 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
               .springify()
               .damping(12)}
             className="space-y-4">
-            <Text
-              style={{fontSize: hp(1.7)}}
-              className="font-bold flex-1 text-neutral-700">
-              Ingredients
-            </Text>
+            <View className="flex flex-row space-x-4">
+              <Text
+                style={{fontSize: hp(1.7)}}
+                className="font-bold flex-1 text-neutral-700">
+                Ingredients
+              </Text>
+              <View className="flex flex-row">
+                <TouchableOpacity
+                  className="py-2 px-4 rounded-bl-full rounded-tl-full"
+                  style={{backgroundColor: colors.cta}}
+                  onPress={() => setServings(s => s - 1)}
+                  disabled={servings <= 1}>
+                  <Text className="font-extrabold text-white">-</Text>
+                </TouchableOpacity>
+                <Text
+                  className="py-2 px-4 font-extrabold text-white"
+                  style={{backgroundColor: colors.cta}}>
+                  {servings}
+                </Text>
+                <TouchableOpacity
+                  className="py-2 px-4 rounded-br-full rounded-tr-full"
+                  style={{backgroundColor: colors.cta}}
+                  onPress={() => setServings(s => s + 1)}>
+                  <Text className="font-extrabold text-white">+</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
             <View className="space-y-2 ml-3">
               {loading ? (
                 <Loader />
+              ) : weigthedIngredients ? (
+                weigthedIngredients.map((ingredient, key) => (
+                  <Ingredient key={key} ingredient={ingredient} modified />
+                ))
               ) : recipeDetails.ingredients &&
                 recipeDetails.ingredients.length > 0 ? (
                 recipeDetails.ingredients.map((ingredient, key) => (

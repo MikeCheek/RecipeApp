@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import HomeScreen from '../screens/HomeScreen';
@@ -27,6 +27,8 @@ import AccountScreen from 'screens/AccountScreen';
 import AddScreen from 'screens/AddScreen';
 import useUserContext from 'helpers/useUserContext';
 import {View} from 'react-native';
+import {showMessage} from 'react-native-flash-message';
+import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const BottomTab = createBottomTabNavigator<RootTabParamList>();
@@ -125,10 +127,31 @@ const BottomTabNavigator = () => {
 };
 
 const AppNavigation = () => {
-  const {user} = useUserContext();
+  const {user, setUser, setCacheChecked, cacheChecked} = useUserContext();
+
+  const handleAuthChange = (u: FirebaseAuthTypes.User | null) => {
+    if (u) {
+      if (u.emailVerified || u.isAnonymous) setUser(u);
+      else
+        showMessage({
+          message: 'You need to verify your email first!',
+          description:
+            'Check your email and click the link to activate your account',
+          type: 'danger',
+          duration: 20000,
+        });
+    } else setUser(null);
+    if (!cacheChecked) setCacheChecked(true);
+  };
+
+  useEffect(() => {
+    const subscriber = auth().onAuthStateChanged(handleAuthChange);
+    return subscriber;
+  }, []);
+
   return (
     <NavigationContainer>
-      {user && user.emailVerified ? (
+      {user && (user.isAnonymous || user.emailVerified) ? (
         <BottomTabNavigator />
       ) : (
         <Stack.Navigator
