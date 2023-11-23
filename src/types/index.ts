@@ -59,14 +59,14 @@ export type RecipeDetails = {
   area: string;
   instructions: string;
   tags?: string;
-  youtube: string;
+  youtube?: string;
   link?: string;
   info?: RecipeInfo;
   ingredients?: string[];
   source?: string | null;
   imageSource?: string | null;
   creativeCommonsConfirmed?: string | null;
-  dateModified?: string;
+  dateModified?: number;
   datetime: number;
   author?: string;
   authorName?: string;
@@ -145,4 +145,9 @@ export type RecipeDetailsAPI = {
     strCreativeCommonsConfirmed: string | null;
     dateModified: string | null;
   }[];
+};
+
+export type ImagePicker = {
+  image: string | undefined;
+  imageType: string | undefined;
 };

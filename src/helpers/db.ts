@@ -7,7 +7,7 @@ import {
   userRecipes,
   userRef,
 } from 'config/firebase';
-import {Recipe, RecipeDetails, User} from 'types';
+import {ImagePicker, Recipe, RecipeDetails, User} from 'types';
 
 export const getRecipes = async (category: string) => {
   const q =
@@ -48,10 +48,7 @@ export const removeRecipe = async (id: string) => {
 
 export const createRecipe = async (
   recipeDetails: Omit<RecipeDetails, 'id'>,
-  imageData: {
-    image: string | undefined;
-    imageType: string | undefined;
-  },
+  imageData: ImagePicker,
 ) => {
   const recipe: Omit<Recipe, 'id'> = {
     name: recipeDetails.name,
@@ -67,10 +64,6 @@ export const createRecipe = async (
     ...recipeDetails,
   });
 
-  // const blob = await base64toBlob(imageData.image ?? '', imageData.imageType);
-  // const res = await fetch(imageData.image ?? '');
-  // const blob = await res.blob();
-
   await recipeImageRef(recipeDetailsDoc.id).putFile(imageData.image ?? '');
   const url = await recipeImageRef(recipeDetailsDoc.id).getDownloadURL();
   await recipeDoc.update({id: recipeDetailsDoc.id, image: url});
@@ -78,6 +71,26 @@ export const createRecipe = async (
     id: recipeDetailsDoc.id,
     image: url,
   });
+};
+
+export const updateRecipe = async (
+  recipeDetails: RecipeDetails,
+  // imageData: ImagePicker,
+) => {
+  const recipe: Omit<Recipe, 'id'> = {
+    name: recipeDetails.name,
+    author: recipeDetails.author,
+    authorName: recipeDetails.authorName,
+    image: recipeDetails.image,
+    datetime: recipeDetails.datetime,
+    category: recipeDetails.category,
+    area: recipeDetails.area,
+  };
+  const recipeDocId = (
+    await recipesRef.where('id', '==', recipeDetails.id).get()
+  ).docs[0].id;
+  await recipesRef.doc(recipeDocId).update(recipe);
+  await recipeRef.doc(recipeDetails.id).update(recipeDetails);
 };
 
 export const likeRecipe = async (userId: string, recipeId: string) => {

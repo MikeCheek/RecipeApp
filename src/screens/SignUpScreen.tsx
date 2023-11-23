@@ -16,6 +16,7 @@ import {ChevronLeftIcon} from 'react-native-heroicons/solid';
 import useUserContext from 'helpers/useUserContext';
 import auth from '@react-native-firebase/auth';
 import CustomButton from 'components/CustomButton';
+import {emailRegexp} from 'helpers/regexp';
 
 const SignUpScreen = () => {
   const [name, setName] = useState<string>('');
@@ -26,7 +27,14 @@ const SignUpScreen = () => {
 
   const navigation = useNavigation<Navigation>();
 
+  const checkEmail = () => {
+    if (email.match(emailRegexp)) return true;
+    showMessage({message: 'The email address is not valid', type: 'danger'});
+    return false;
+  };
+
   const submit = () => {
+    if (!checkEmail()) return;
     if (email && password && name) {
       setUserLoading(true);
       auth()

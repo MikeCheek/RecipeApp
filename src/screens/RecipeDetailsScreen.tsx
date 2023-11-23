@@ -9,21 +9,34 @@ import {
   ChevronLeftIcon,
   ClockIcon,
   FireIcon,
+  MinusCircleIcon,
   Square3Stack3DIcon,
   UsersIcon,
+  XMarkIcon,
 } from 'react-native-heroicons/outline';
 import {HeartIcon, PencilIcon} from 'react-native-heroicons/solid';
-import {RecipeDetails} from 'types';
+import {ImagePicker, RecipeDetails, RecipeInfo} from 'types';
 import Loader from 'components/Loader';
 import RecipeBadge from 'components/RecipeBadge';
 import YoutubeIframe from 'react-native-youtube-iframe';
 import Animated, {FadeIn, FadeInDown} from 'react-native-reanimated';
 import ScreenWrapper from 'components/ScreenWrapper';
 import IconButton from 'components/IconButton';
-import {getRecipeDetails, likeRecipe, unlikeRecipe} from 'helpers/db';
+import {
+  getRecipeDetails,
+  likeRecipe,
+  unlikeRecipe,
+  updateRecipe,
+} from 'helpers/db';
 import useUserContext from 'helpers/useUserContext';
 import Ingredient from 'components/Ingredient';
 import {colors} from 'theme';
+import AddImage from 'components/AddImage';
+import CustomTextInput from 'components/CustomTextInput';
+import AddInfo from 'components/AddInfo';
+import CustomButton from 'components/CustomButton';
+import {showMessage} from 'react-native-flash-message';
+import useLoaderContext from 'helpers/useLoaderContext';
 
 const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
   const {id, image, name} = route.params;
@@ -31,10 +44,25 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
   const [favourite, setFavourite] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [recipeDetails, setRecipeDetails] = useState<Partial<RecipeDetails>>();
+  const [editMode, setEditMode] = useState<boolean>(false);
 
   const [servings, setServings] = useState<number>(0);
   const [weigthedIngredients, setWeightedIngredients] = useState<string[]>();
   const {user} = useUserContext();
+
+  // const [imageEdit, setImageEdit] = useState<ImagePicker>({
+  //   image: image,
+  //   imageType: '',
+  // });
+  const [nameEdit, setNameEdit] = useState<string>(name);
+  const [areaEdit, setAreaEdit] = useState<string>();
+  const [ingredientsEdit, setIngredientsEdit] = useState<string[]>([]);
+  const [infoEdit, setInfoEdit] = useState<RecipeInfo>({});
+  const [instructionsEdit, setInstructionsEdit] = useState<string>();
+  const [linkEdit, setLinkEdit] = useState<string>();
+  const [youtubeEdit, setYoutubeEdit] = useState<string>();
+
+  const {setVisible} = useLoaderContext();
 
   const imTheAuthor =
     user && recipeDetails ? user.uid === recipeDetails.author : false;
@@ -45,6 +73,18 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
       if (newFav) likeRecipe(user!.uid, id);
       if (newFav) unlikeRecipe(user!.uid, id);
       return newFav;
+    });
+  };
+
+  const handleEdit = () => {
+    setEditMode(v => !v);
+  };
+
+  const removeIngredient = (index: number) => {
+    setIngredientsEdit(i => {
+      const array = [...i];
+      array.splice(index, 1);
+      return array;
     });
   };
 
@@ -95,13 +135,58 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
     }
   };
 
+  const update = async () => {
+    if (
+      recipeDetails &&
+      nameEdit.trim().length > 0 &&
+      areaEdit &&
+      areaEdit.trim().length > 0 &&
+      instructionsEdit &&
+      instructionsEdit.trim().length > 0 &&
+      infoEdit &&
+      ingredientsEdit.length > 0
+    ) {
+      setVisible(true);
+      const res = await updateRecipe({
+        ...recipeDetails,
+        area: areaEdit,
+        id: id,
+        name: nameEdit,
+        instructions: instructionsEdit,
+        youtube: youtubeEdit,
+        dateModified: new Date(Date.now()).getTime(),
+        info: infoEdit,
+        ingredients: ingredientsEdit,
+        image: image,
+        category: recipeDetails.category ?? '',
+        datetime: recipeDetails.datetime ?? new Date(Date.now()).getTime(),
+      });
+      fetchData();
+      setVisible(false);
+      showMessage({message: 'Recipe updated!', type: 'success'});
+      setEditMode(false);
+    } else
+      showMessage({
+        message: 'Fill all required fields',
+        type: 'warning',
+      });
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
 
   useEffect(() => {
-    if (recipeDetails?.info?.servings)
-      setServings(Number(recipeDetails?.info?.servings));
+    if (recipeDetails) {
+      if (recipeDetails.info?.servings)
+        setServings(Number(recipeDetails?.info?.servings));
+      setAreaEdit(recipeDetails.area);
+      setInfoEdit(recipeDetails.info ?? {});
+      setIngredientsEdit(recipeDetails.ingredients ?? []);
+      setInstructionsEdit(recipeDetails.instructions);
+      setLinkEdit(recipeDetails.link);
+      setYoutubeEdit(recipeDetails.youtube);
+    }
   }, [recipeDetails]);
 
   useEffect(() => {
@@ -121,6 +206,9 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
       contentContainerStyle={{paddingBottom: hp(20)}}>
       <StatusBar barStyle="light-content" />
       <View className="flex-row justify-center">
+        {/* {editMode ? (
+          <AddImage image={imageEdit} setImage={setImageEdit} big />
+        ) : ( */}
         <Animated.Image
           source={{uri: image}}
           sharedTransitionTag={name}
@@ -133,6 +221,7 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
             marginTop: 4,
           }}
         />
+        {/* )} */}
       </View>
       <Animated.View
         entering={FadeIn.delay(200).duration(1000)}
@@ -145,20 +234,30 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
         <View className="flex flex-row space-x-2">
           {imTheAuthor ? (
             <TouchableOpacity
-              onPress={() => {}}
+              onPress={handleEdit}
               className="p-2 rounded-full bg-white">
-              <PencilIcon size={hp(3.5)} strokeWidth={4.5} color={'gray'} />
+              {editMode ? (
+                <XMarkIcon
+                  size={hp(3.5)}
+                  strokeWidth={4.5}
+                  color={colors.cta}
+                />
+              ) : (
+                <PencilIcon size={hp(3.5)} strokeWidth={4.5} color={'gray'} />
+              )}
             </TouchableOpacity>
           ) : null}
-          <TouchableOpacity
-            onPress={handleHeart}
-            className="p-2 rounded-full bg-white">
-            <HeartIcon
-              size={hp(3.5)}
-              strokeWidth={4.5}
-              color={favourite ? 'red' : 'gray'}
-            />
-          </TouchableOpacity>
+          {editMode ? null : (
+            <TouchableOpacity
+              onPress={handleHeart}
+              className="p-2 rounded-full bg-white">
+              <HeartIcon
+                size={hp(3.5)}
+                strokeWidth={4.5}
+                color={favourite ? 'red' : 'gray'}
+              />
+            </TouchableOpacity>
+          )}
         </View>
       </Animated.View>
       {loading ? (
@@ -168,16 +267,37 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
           <Animated.View
             entering={FadeInDown.duration(700).springify().damping(12)}
             className="space-y-2">
-            <Text
-              style={{fontSize: hp(3)}}
-              className="font-bold flex-1 text-neutral-700">
-              {recipeDetails.name ?? name}
-            </Text>
-            <Text
-              style={{fontSize: hp(2)}}
-              className="font-medium flex-1 text-neutral-500">
-              {recipeDetails.area}
-            </Text>
+            {editMode ? (
+              <>
+                <CustomTextInput
+                  style={{fontSize: hp(3)}}
+                  className="font-bold flex-1 text-neutral-700"
+                  value={nameEdit}
+                  text="Name"
+                  onChangeText={setNameEdit}
+                />
+                <CustomTextInput
+                  style={{fontSize: hp(3)}}
+                  className="font-bold flex-1 text-neutral-700"
+                  value={areaEdit}
+                  text="Geografic Area"
+                  onChangeText={setAreaEdit}
+                />
+              </>
+            ) : (
+              <>
+                <Text
+                  style={{fontSize: hp(3)}}
+                  className="font-bold flex-1 text-neutral-700">
+                  {recipeDetails.name ?? name}
+                </Text>
+                <Text
+                  style={{fontSize: hp(2)}}
+                  className="font-medium flex-1 text-neutral-500">
+                  {recipeDetails.area}
+                </Text>
+              </>
+            )}
           </Animated.View>
           <Animated.View
             entering={FadeInDown.delay(100)
@@ -185,35 +305,9 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
               .springify()
               .damping(12)}
             className="flex-row justify-around">
-            <RecipeBadge
-              title={recipeDetails.info?.minutes}
-              description="Minutes"
-              icon={
-                <ClockIcon size={hp(4)} strokeWidth={2.5} color="#525252" />
-              }
-            />
-            <RecipeBadge
-              title={recipeDetails.info?.servings}
-              description="Servings"
-              icon={
-                <UsersIcon size={hp(4)} strokeWidth={2.5} color="#525252" />
-              }
-            />
-            <RecipeBadge
-              title={recipeDetails.info?.calories}
-              description="Calories"
-              icon={<FireIcon size={hp(4)} strokeWidth={2.5} color="#525252" />}
-            />
-            <RecipeBadge
-              title={recipeDetails.info?.difficulty}
-              description="Difficulty"
-              icon={
-                <Square3Stack3DIcon
-                  size={hp(4)}
-                  strokeWidth={2.5}
-                  color="#525252"
-                />
-              }
+            <AddInfo
+              info={(editMode ? infoEdit : recipeDetails.info) ?? {}}
+              setInfo={editMode ? setInfoEdit : undefined}
             />
           </Animated.View>
           <Animated.View
@@ -228,31 +322,67 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
                 className="font-bold flex-1 text-neutral-700">
                 Ingredients
               </Text>
-              <View className="flex flex-row">
-                <TouchableOpacity
-                  className="py-2 px-4 rounded-bl-full rounded-tl-full"
-                  style={{backgroundColor: colors.cta}}
-                  onPress={() => setServings(s => s - 1)}
-                  disabled={servings <= 1}>
-                  <Text className="font-extrabold text-white">-</Text>
-                </TouchableOpacity>
-                <Text
-                  className="py-2 px-4 font-extrabold text-white"
-                  style={{backgroundColor: colors.cta}}>
-                  {servings}
-                </Text>
-                <TouchableOpacity
-                  className="py-2 px-4 rounded-br-full rounded-tr-full"
-                  style={{backgroundColor: colors.cta}}
-                  onPress={() => setServings(s => s + 1)}>
-                  <Text className="font-extrabold text-white">+</Text>
-                </TouchableOpacity>
-              </View>
+              {editMode ? null : (
+                <View className="flex flex-row">
+                  <TouchableOpacity
+                    className="py-2 px-4 rounded-bl-full rounded-tl-full"
+                    style={{backgroundColor: colors.cta}}
+                    onPress={() => setServings(s => s - 1)}
+                    disabled={servings <= 1}>
+                    <Text className="font-extrabold text-white">-</Text>
+                  </TouchableOpacity>
+                  <Text
+                    className="py-2 px-4 font-extrabold text-white"
+                    style={{backgroundColor: colors.cta}}>
+                    {servings}
+                  </Text>
+                  <TouchableOpacity
+                    className="py-2 px-4 rounded-br-full rounded-tr-full"
+                    style={{backgroundColor: colors.cta}}
+                    onPress={() => setServings(s => s + 1)}>
+                    <Text className="font-extrabold text-white">+</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
 
             <View className="space-y-2 ml-3">
               {loading ? (
                 <Loader />
+              ) : editMode ? (
+                <>
+                  <>
+                    {ingredientsEdit.map((ingredient, key) => (
+                      <View
+                        key={key}
+                        className="flex flex-row justify-between items-center py-1 w-full relative">
+                        <Ingredient
+                          ingredient={ingredient}
+                          setIngredient={t =>
+                            setIngredientsEdit(is =>
+                              is.map((i, k) => (k === key ? t : i)),
+                            )
+                          }
+                        />
+                        <View className="absolute top-0 right-[5%]">
+                          <IconButton
+                            big
+                            Icon={MinusCircleIcon}
+                            onPress={() => removeIngredient(key)}
+                          />
+                        </View>
+                      </View>
+                    ))}
+                  </>
+                  <View className="flex items-center justify-center w-full">
+                    <TouchableOpacity
+                      onPress={() => setIngredientsEdit(i => [...i, ''])}>
+                      <Text className="text-base" style={{color: colors.cta}}>
+                        Add ingredient
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
               ) : weigthedIngredients ? (
                 weigthedIngredients.map((ingredient, key) => (
                   <Ingredient key={key} ingredient={ingredient} modified />
@@ -273,15 +403,36 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
               .springify()
               .damping(12)}
             className="space-y-4">
-            <Text
-              style={{fontSize: hp(1.7)}}
-              className="font-bold flex-1 text-neutral-700">
-              Instructions
-            </Text>
-            <Text style={{fontSize: hp(1.8)}} className="text-neutral-700">
-              {recipeDetails.instructions ?? 'No instructions'}
-            </Text>
-            {recipeDetails.link ? (
+            {editMode ? (
+              <CustomTextInput
+                textArea
+                text="Instructions"
+                style={{fontSize: hp(1.8)}}
+                className="text-neutral-700"
+                value={instructionsEdit}
+                onChangeText={setInstructionsEdit}
+              />
+            ) : (
+              <>
+                <Text
+                  style={{fontSize: hp(1.7)}}
+                  className="font-bold flex-1 text-neutral-700">
+                  Instructions
+                </Text>
+                <Text style={{fontSize: hp(1.8)}} className="text-neutral-700">
+                  {recipeDetails.instructions ?? 'No instructions'}
+                </Text>
+              </>
+            )}
+            {editMode ? (
+              <CustomTextInput
+                text="Link (Optional)"
+                style={{fontSize: hp(1.8)}}
+                className="text-neutral-700"
+                value={linkEdit}
+                onChangeText={setLinkEdit}
+              />
+            ) : recipeDetails.link ? (
               <View className="flex items-start justify-start">
                 <Text
                   style={{fontSize: hp(1.7)}}
@@ -304,7 +455,15 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
             ) : null}
           </Animated.View>
 
-          {recipeDetails.youtube ? (
+          {editMode ? (
+            <CustomTextInput
+              text="Youtube (Optional)"
+              style={{fontSize: hp(1.8)}}
+              className="text-neutral-700"
+              value={youtubeEdit}
+              onChangeText={setYoutubeEdit}
+            />
+          ) : recipeDetails.youtube ? (
             <Animated.View
               entering={FadeInDown.delay(400)
                 .duration(700)
@@ -323,6 +482,10 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
                 />
               </View>
             </Animated.View>
+          ) : null}
+
+          {editMode ? (
+            <CustomButton onPress={update} text="Update recipe" />
           ) : null}
         </View>
       ) : (

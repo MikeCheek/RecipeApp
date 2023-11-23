@@ -1,11 +1,4 @@
-import {
-  View,
-  Text,
-  StatusBar,
-  TouchableOpacity,
-  Image,
-  Touchable,
-} from 'react-native';
+import {View, Text, StatusBar, TouchableOpacity} from 'react-native';
 import React, {useState} from 'react';
 import ScreenWrapper from 'components/ScreenWrapper';
 import Animated, {FadeInDown} from 'react-native-reanimated';
@@ -16,18 +9,8 @@ import {
 import CustomTextInput from 'components/CustomTextInput';
 import {colors} from 'theme';
 import Categories from 'components/Categories';
-import {pickImageFromCamera, pickImageFromGallery} from 'helpers/imagePicker';
 import IconButton from 'components/IconButton';
-import {
-  PhotoIcon,
-  CameraIcon,
-  ClockIcon,
-  UsersIcon,
-  FireIcon,
-  Square3Stack3DIcon,
-  PlusCircleIcon,
-  MinusCircleIcon,
-} from 'react-native-heroicons/outline';
+import {MinusCircleIcon} from 'react-native-heroicons/outline';
 import {createRecipe, getRecipes} from 'helpers/db';
 import {showMessage} from 'react-native-flash-message';
 import useUserContext from 'helpers/useUserContext';
@@ -35,10 +18,12 @@ import useLoaderContext from 'helpers/useLoaderContext';
 import useCategoryContext from 'helpers/useCategoryContext';
 import {useAppDispatch} from 'redux/hooks';
 import {setRecipes, setRecipesLoading} from 'redux/slices/recipes';
-import {RecipeInfo} from 'types';
+import {ImagePicker, RecipeInfo} from 'types';
 import RecipeBadge from 'components/RecipeBadge';
 import Ingredient from 'components/Ingredient';
 import CustomButton from 'components/CustomButton';
+import AddImage from 'components/AddImage';
+import AddInfo from 'components/AddInfo';
 
 const AddScreen = () => {
   const [name, setName] = useState<string>('');
@@ -49,10 +34,7 @@ const AddScreen = () => {
   const [ingredients, setIngredients] = useState<string[]>(['']);
   const [link, setLink] = useState<string>('');
   const [youtube, setYoutube] = useState<string>('');
-  const [image, setImage] = useState<{
-    image: string | undefined;
-    imageType: string | undefined;
-  }>();
+  const [image, setImage] = useState<ImagePicker>();
 
   const dispatch = useAppDispatch();
 
@@ -72,16 +54,6 @@ const AddScreen = () => {
       array.splice(index, 1);
       return array;
     });
-  };
-
-  const handlePickGallery = async () => {
-    const i = await pickImageFromGallery();
-    if (i) setImage(i);
-  };
-
-  const handlePickCamera = async () => {
-    const i = await pickImageFromCamera();
-    if (i) setImage(i);
   };
 
   const add = async () => {
@@ -153,33 +125,7 @@ const AddScreen = () => {
           className="space-y-2">
           <Text className={`${colors.heading} text-lg font-bold`}>Image</Text>
           <View className="flex flex-col justify-center items-center mx-4 space-y-4">
-            <View
-              className="rounded-2xl relative bg-white"
-              style={{width: 200, height: 200}}>
-              {image ? (
-                <Image
-                  source={{uri: image.image}}
-                  className="rounded-2xl"
-                  style={{width: 200, height: 200}}
-                />
-              ) : (
-                <></>
-              )}
-              <View className="flex flex-row items-center justify-around space-x-2 w-full absolute bottom-2 mx-auto">
-                <IconButton
-                  big
-                  thickABit
-                  Icon={CameraIcon}
-                  onPress={handlePickCamera}
-                />
-                <IconButton
-                  big
-                  thickABit
-                  Icon={PhotoIcon}
-                  onPress={handlePickGallery}
-                />
-              </View>
-            </View>
+            <AddImage image={image} setImage={setImage} />
           </View>
           <Text className={`${colors.heading} text-lg font-bold`}>
             Category
@@ -203,50 +149,7 @@ const AddScreen = () => {
           entering={FadeInDown.delay(200).duration(700).springify().damping(12)}
           className="flex-col justify-around">
           <Text className={`${colors.heading} text-lg font-bold`}>Info</Text>
-          <View className="flex-row justify-around">
-            <RecipeBadge
-              title={info.minutes}
-              setTitle={(title: string) =>
-                setInfo(i => ({...i, minutes: title}))
-              }
-              description="Minutes"
-              icon={
-                <ClockIcon size={hp(4)} strokeWidth={2.5} color="#525252" />
-              }
-            />
-            <RecipeBadge
-              title={info.servings}
-              setTitle={(title: string) =>
-                setInfo(i => ({...i, servings: title}))
-              }
-              description="Servings"
-              icon={
-                <UsersIcon size={hp(4)} strokeWidth={2.5} color="#525252" />
-              }
-            />
-            <RecipeBadge
-              title={info.calories}
-              setTitle={(title: string) =>
-                setInfo(i => ({...i, calories: title}))
-              }
-              description="Calories"
-              icon={<FireIcon size={hp(4)} strokeWidth={2.5} color="#525252" />}
-            />
-            <RecipeBadge
-              title={info.difficulty}
-              setTitle={(title: string) =>
-                setInfo(i => ({...i, difficulty: title}))
-              }
-              description="Difficulty"
-              icon={
-                <Square3Stack3DIcon
-                  size={hp(4)}
-                  strokeWidth={2.5}
-                  color="#525252"
-                />
-              }
-            />
-          </View>
+          <AddInfo info={info} setInfo={setInfo} />
         </Animated.View>
         <Animated.View
           entering={FadeInDown.delay(300).duration(700).springify().damping(12)}

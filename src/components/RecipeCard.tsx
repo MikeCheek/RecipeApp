@@ -10,7 +10,6 @@ import {Navigation} from 'navigation/types';
 import {colors} from 'theme';
 import IconButton from './IconButton';
 import {ArrowUturnLeftIcon, TrashIcon} from 'react-native-heroicons/outline';
-import {removeRecipe} from 'helpers/db';
 import useUserContext from 'helpers/useUserContext';
 
 interface RecipeCardProps {
@@ -67,7 +66,14 @@ const RecipeCard = ({
           <Text
             style={{fontSize: hp(1.5), color: colors.secondaryCta}}
             className={`font-semibold ml-2 text-neutral-600`}>
-            {item.authorName}
+            Author:{' '}
+            {user && item.author === user.uid ? (
+              <Text style={{color: colors.cta}}>You</Text>
+            ) : item.authorName.length > 20 ? (
+              item.authorName.slice(0, 20) + '...'
+            ) : (
+              item.authorName
+            )}
           </Text>
         ) : null}
         {showOptions ? (
