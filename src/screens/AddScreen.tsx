@@ -122,7 +122,7 @@ const AddScreen = () => {
       <View className="px-4 flex justify-between space-y-4 pt-8">
         <Animated.View
           entering={FadeInDown.duration(700).springify().damping(12)}
-          className="space-y-2">
+          className="flex flex-col space-y-2">
           <Text className={`${colors.heading} text-lg font-bold`}>Image</Text>
           <View className="flex flex-col justify-center items-center mx-4 space-y-4">
             <AddImage image={image} setImage={setImage} />

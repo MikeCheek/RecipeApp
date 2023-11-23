@@ -6,6 +6,7 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import {
+  CheckIcon,
   ChevronLeftIcon,
   ClockIcon,
   FireIcon,
@@ -37,6 +38,7 @@ import AddInfo from 'components/AddInfo';
 import CustomButton from 'components/CustomButton';
 import {showMessage} from 'react-native-flash-message';
 import useLoaderContext from 'helpers/useLoaderContext';
+import {findNumbersRegexp} from 'helpers/regexp';
 
 const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
   const {id, image, name} = route.params;
@@ -50,10 +52,7 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
   const [weigthedIngredients, setWeightedIngredients] = useState<string[]>();
   const {user} = useUserContext();
 
-  // const [imageEdit, setImageEdit] = useState<ImagePicker>({
-  //   image: image,
-  //   imageType: '',
-  // });
+  const [imageEdit, setImageEdit] = useState<ImagePicker>();
   const [nameEdit, setNameEdit] = useState<string>(name);
   const [areaEdit, setAreaEdit] = useState<string>();
   const [ingredientsEdit, setIngredientsEdit] = useState<string[]>([]);
@@ -63,7 +62,6 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
   const [youtubeEdit, setYoutubeEdit] = useState<string>();
 
   const {setVisible} = useLoaderContext();
-
   const imTheAuthor =
     user && recipeDetails ? user.uid === recipeDetails.author : false;
 
@@ -116,17 +114,16 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
       for (let i = 0; i < recipeDetails.ingredients.length; i++) {
         const [name, others] = recipeDetails.ingredients[i].split(':');
         if (others) {
-          const values = others.match(/\d+/);
-          const value = values ? Number(values[0]) : null;
-          if (value === null || !recipeDetails.info?.servings)
+          const values = others.match(findNumbersRegexp);
+          const base = values ? values[0] : null;
+          const value = values ? Number(values[0].replace(',', '.')) : null;
+          if (value === null || base === null || !recipeDetails.info?.servings)
             tmp.push(recipeDetails.ingredients[i]);
           else {
             const newValue =
               (value / Number(recipeDetails.info.servings)) * servings;
             const newIngredient =
-              name +
-              ':' +
-              others.replace(value.toString(), newValue.toString());
+              name + ':' + others.replace(base, newValue.toString());
             tmp.push(newIngredient);
           }
         } else tmp.push(name);
@@ -147,20 +144,23 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
       ingredientsEdit.length > 0
     ) {
       setVisible(true);
-      const res = await updateRecipe({
-        ...recipeDetails,
-        area: areaEdit,
-        id: id,
-        name: nameEdit,
-        instructions: instructionsEdit,
-        youtube: youtubeEdit,
-        dateModified: new Date(Date.now()).getTime(),
-        info: infoEdit,
-        ingredients: ingredientsEdit,
-        image: image,
-        category: recipeDetails.category ?? '',
-        datetime: recipeDetails.datetime ?? new Date(Date.now()).getTime(),
-      });
+      const res = await updateRecipe(
+        {
+          ...recipeDetails,
+          area: areaEdit,
+          id: id,
+          name: nameEdit,
+          instructions: instructionsEdit,
+          youtube: youtubeEdit,
+          dateModified: new Date(Date.now()).getTime(),
+          info: infoEdit,
+          ingredients: ingredientsEdit,
+          image: image,
+          category: recipeDetails.category ?? '',
+          datetime: recipeDetails.datetime ?? new Date(Date.now()).getTime(),
+        },
+        imageEdit,
+      );
       fetchData();
       setVisible(false);
       showMessage({message: 'Recipe updated!', type: 'success'});
@@ -206,22 +206,26 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
       contentContainerStyle={{paddingBottom: hp(20)}}>
       <StatusBar barStyle="light-content" />
       <View className="flex-row justify-center">
-        {/* {editMode ? (
-          <AddImage image={imageEdit} setImage={setImageEdit} big />
-        ) : ( */}
-        <Animated.Image
-          source={{uri: image}}
-          sharedTransitionTag={name}
-          style={{
-            width: wp(98),
-            height: hp(50),
-            borderRadius: 53,
-            borderBottomLeftRadius: 40,
-            borderBottomRightRadius: 40,
-            marginTop: 4,
-          }}
-        />
-        {/* )} */}
+        {editMode ? (
+          <AddImage
+            image={imageEdit ?? {image: image, imageType: ''}}
+            setImage={setImageEdit}
+            big
+          />
+        ) : (
+          <Animated.Image
+            source={{uri: image}}
+            sharedTransitionTag={name}
+            style={{
+              width: wp(98),
+              height: hp(50),
+              borderRadius: 53,
+              borderBottomLeftRadius: 40,
+              borderBottomRightRadius: 40,
+              marginTop: 4,
+            }}
+          />
+        )}
       </View>
       <Animated.View
         entering={FadeIn.delay(200).duration(1000)}
@@ -243,11 +247,21 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
                   color={colors.cta}
                 />
               ) : (
-                <PencilIcon size={hp(3.5)} strokeWidth={4.5} color={'gray'} />
+                <PencilIcon
+                  size={hp(3.5)}
+                  strokeWidth={4.5}
+                  color={colors.cta}
+                />
               )}
             </TouchableOpacity>
           ) : null}
-          {editMode ? null : (
+          {editMode ? (
+            <TouchableOpacity
+              onPress={update}
+              className="p-2 rounded-full bg-white">
+              <CheckIcon size={hp(3.5)} strokeWidth={4.5} color={colors.cta} />
+            </TouchableOpacity>
+          ) : (
             <TouchableOpacity
               onPress={handleHeart}
               className="p-2 rounded-full bg-white">
@@ -266,7 +280,7 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
         <View className="px-4 flex justify-between space-y-4 pt-8">
           <Animated.View
             entering={FadeInDown.duration(700).springify().damping(12)}
-            className="space-y-2">
+            className="space-y-2 relative">
             {editMode ? (
               <>
                 <CustomTextInput
@@ -285,7 +299,7 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
                 />
               </>
             ) : (
-              <>
+              <View className="flex flex-col w-full">
                 <Text
                   style={{fontSize: hp(3)}}
                   className="font-bold flex-1 text-neutral-700">
@@ -296,7 +310,19 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
                   className="font-medium flex-1 text-neutral-500">
                   {recipeDetails.area}
                 </Text>
-              </>
+                {recipeDetails.authorName ? (
+                  <Text
+                    style={{fontSize: hp(2), color: colors.secondaryCta}}
+                    className={`font-semibold text-neutral-600 text-right`}>
+                    Author:{' '}
+                    {user && recipeDetails.author === user.uid ? (
+                      <Text style={{color: colors.cta}}>You</Text>
+                    ) : (
+                      recipeDetails.authorName
+                    )}
+                  </Text>
+                ) : null}
+              </View>
             )}
           </Animated.View>
           <Animated.View
@@ -416,7 +442,7 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
               <>
                 <Text
                   style={{fontSize: hp(1.7)}}
-                  className="font-bold flex-1 text-neutral-700">
+                  className="font-bold flex-1 text-neutral-700 mb-2">
                   Instructions
                 </Text>
                 <Text style={{fontSize: hp(1.8)}} className="text-neutral-700">

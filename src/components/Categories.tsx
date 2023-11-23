@@ -33,7 +33,7 @@ const Categories = ({active, setActive, noAll = false}: CategoriesProps) => {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            className="space-x-4"
+            className="space-x-4 mt-2"
             contentContainerStyle={{paddingHorizontal: 15}}>
             {cats.map((category, key) => (
               <TouchableOpacity

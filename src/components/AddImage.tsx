@@ -18,16 +18,18 @@ interface AddImageProps {
 const AddImage = ({image, setImage, big}: AddImageProps) => {
   const handlePickGallery = async () => {
     const i = await pickImageFromGallery();
-    if (i) setImage(i);
+    if (i && i.image) setImage(i);
   };
 
   const handlePickCamera = async () => {
     const i = await pickImageFromCamera();
-    if (i) setImage(i);
+    if (i && i.image) setImage(i);
   };
 
   return (
-    <View className="rounded-2xl relative bg-white">
+    <View
+      style={big ? {} : {width: 200, height: 200}}
+      className="rounded-2xl relative bg-white">
       {image ? (
         <Image
           source={{uri: image.image}}

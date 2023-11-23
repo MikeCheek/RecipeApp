@@ -75,13 +75,19 @@ export const createRecipe = async (
 
 export const updateRecipe = async (
   recipeDetails: RecipeDetails,
-  // imageData: ImagePicker,
+  imageData?: ImagePicker,
 ) => {
+  let url: string | undefined;
+  if (imageData && imageData.image) {
+    await recipeImageRef(recipeDetails.id).delete();
+    await recipeImageRef(recipeDetails.id).putFile(imageData.image);
+    url = await recipeImageRef(recipeDetails.id).getDownloadURL();
+  }
   const recipe: Omit<Recipe, 'id'> = {
     name: recipeDetails.name,
     author: recipeDetails.author,
     authorName: recipeDetails.authorName,
-    image: recipeDetails.image,
+    image: imageData && imageData.image && url ? url : recipeDetails.image,
     datetime: recipeDetails.datetime,
     category: recipeDetails.category,
     area: recipeDetails.area,
@@ -90,7 +96,13 @@ export const updateRecipe = async (
     await recipesRef.where('id', '==', recipeDetails.id).get()
   ).docs[0].id;
   await recipesRef.doc(recipeDocId).update(recipe);
-  await recipeRef.doc(recipeDetails.id).update(recipeDetails);
+  await recipeRef
+    .doc(recipeDetails.id)
+    .update(
+      imageData && imageData.image && url
+        ? {...recipeDetails, image: url}
+        : recipeDetails,
+    );
 };
 
 export const likeRecipe = async (userId: string, recipeId: string) => {

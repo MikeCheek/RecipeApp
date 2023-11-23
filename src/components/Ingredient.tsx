@@ -5,6 +5,7 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import {colors} from 'theme';
+import {findNumbersRegexp} from 'helpers/regexp';
 
 interface IngredientProps {
   ingredient: string;
@@ -45,7 +46,9 @@ const Ingredient = ({
                 style={{
                   fontSize: hp(1.8),
                   color:
-                    modified && measure.match(/\d+/) ? colors.cta : undefined,
+                    modified && measure.match(findNumbersRegexp)
+                      ? colors.cta
+                      : undefined,
                 }}
                 className="font-extrabold text-neutral-700">
                 {measure.trim()}
