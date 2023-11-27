@@ -4,14 +4,17 @@ import {
   NativeStackNavigationProp,
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
-import {Recipe} from 'types';
 
-export type Navigation = NativeStackNavigationProp<RootStackParamList>;
+export type HomeNavigation = NativeStackNavigationProp<HomeStackParamList>;
+export type RootNavigation = NativeStackNavigationProp<RootStackParamList>;
 
 export type RootStackParamList = {
   Welcome: undefined;
   SignIn: undefined;
   SignUp: undefined;
+};
+
+export type HomeStackParamList = {
   Home: undefined;
   RecipeDetails: {id: string; image: string; name: string};
 };
@@ -23,6 +26,8 @@ export type RootTabParamList = {
   HomeTab: undefined;
   AddTab: undefined;
   AccountTab: undefined;
+  SearchAdvancedTab: undefined;
+  ShoppingCartTab: undefined;
 };
 
 export type RootTabScreenProps<Screen extends keyof RootTabParamList> =
@@ -31,6 +36,6 @@ export type RootTabScreenProps<Screen extends keyof RootTabParamList> =
     NativeStackScreenProps<RootStackParamList>
   >;
 export type RecipeDetailsScreenProps = NativeStackScreenProps<
-  RootStackParamList,
+  HomeStackParamList,
   'RecipeDetails'
 >;

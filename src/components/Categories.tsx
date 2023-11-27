@@ -1,13 +1,11 @@
 import {View, Text, ScrollView, TouchableOpacity} from 'react-native';
 import React from 'react';
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
+import {hp, wp} from 'helpers/responsiveScreen';
 import Animated, {FadeInDown} from 'react-native-reanimated';
 import {useAppSelector} from 'redux/hooks';
 import Loader from './Loader';
 import {colors} from 'theme';
+import {HeartIcon} from 'react-native-heroicons/solid';
 
 interface CategoriesProps {
   active?: string;
@@ -21,7 +19,10 @@ const Categories = ({active, setActive, noAll = false}: CategoriesProps) => {
   );
 
   const cats = noAll
-    ? categories?.filter(c => c.name.toLowerCase() != 'all')
+    ? categories?.filter(
+        c =>
+          c.name.toLowerCase() != 'all' && c.name.toLowerCase() != 'favourites',
+      )
     : categories;
 
   return (
@@ -49,18 +50,26 @@ const Categories = ({active, setActive, noAll = false}: CategoriesProps) => {
                         }
                       : {}
                   }>
-                  {typeof category.image === 'string' ? (
-                    <Animated.Image
-                      source={{uri: category.image}}
-                      style={{width: hp(6), height: hp(6)}}
-                      className="rounded-full"
-                    />
+                  {category.image ? (
+                    typeof category.image === 'string' ? (
+                      <Animated.Image
+                        source={{uri: category.image}}
+                        style={{width: hp(6), height: hp(6)}}
+                        className="rounded-full"
+                      />
+                    ) : (
+                      <Animated.Image
+                        source={category.image}
+                        style={{width: hp(6), height: hp(6)}}
+                        className="rounded-full"
+                      />
+                    )
                   ) : (
-                    <Animated.Image
-                      source={category.image}
-                      style={{width: hp(6), height: hp(6)}}
-                      className="rounded-full"
-                    />
+                    <View
+                      className="flex items-center justify-center"
+                      style={{width: hp(6), height: hp(6)}}>
+                      <HeartIcon size={hp(5)} color={colors.heart} />
+                    </View>
                   )}
                 </View>
                 <Text className="text-neutral-600" style={{fontSize: hp(1.6)}}>

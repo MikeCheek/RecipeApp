@@ -3,13 +3,10 @@ import React, {useState} from 'react';
 import ScreenWrapper from 'components/ScreenWrapper';
 import {colors} from 'theme';
 import Loader from 'components/Loader';
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
+import {hp, wp} from 'helpers/responsiveScreen';
 import {showMessage} from 'react-native-flash-message';
 import {useNavigation} from '@react-navigation/native';
-import {Navigation} from 'navigation/types';
+import {RootNavigation} from 'navigation/types';
 import CustomTextInput from 'components/CustomTextInput';
 import IconButton from 'components/IconButton';
 import {ChevronLeftIcon} from 'react-native-heroicons/solid';
@@ -25,7 +22,7 @@ const SignUpScreen = () => {
 
   const {userLoading, setUserLoading} = useUserContext();
 
-  const navigation = useNavigation<Navigation>();
+  const navigation = useNavigation<RootNavigation>();
 
   const checkEmail = () => {
     if (email.match(emailRegexp)) return true;

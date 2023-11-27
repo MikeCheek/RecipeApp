@@ -1,9 +1,6 @@
 import {View, Text, TextInput} from 'react-native';
 import React from 'react';
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
+import {hp, wp} from 'helpers/responsiveScreen';
 import {colors} from 'theme';
 import {findNumbersRegexp} from 'helpers/regexp';
 

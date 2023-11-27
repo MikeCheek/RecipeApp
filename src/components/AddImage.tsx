@@ -4,11 +4,7 @@ import {ImagePicker} from 'types';
 import {pickImageFromCamera, pickImageFromGallery} from 'helpers/imagePicker';
 import IconButton from './IconButton';
 import {PhotoIcon, CameraIcon} from 'react-native-heroicons/outline';
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
-
+import {hp, wp} from 'helpers/responsiveScreen';
 interface AddImageProps {
   image?: ImagePicker;
   setImage: (image: ImagePicker) => void;

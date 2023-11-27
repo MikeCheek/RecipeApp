@@ -1,16 +1,14 @@
 import {Linking, StatusBar, Text, TouchableOpacity, View} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {RecipeDetailsScreenProps} from 'navigation/types';
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
+import {hp, wp} from 'helpers/responsiveScreen';
 import {
   CheckIcon,
   ChevronLeftIcon,
   ClockIcon,
   FireIcon,
   MinusCircleIcon,
+  QueueListIcon,
   Square3Stack3DIcon,
   UsersIcon,
   XMarkIcon,
@@ -24,6 +22,7 @@ import Animated, {FadeIn, FadeInDown} from 'react-native-reanimated';
 import ScreenWrapper from 'components/ScreenWrapper';
 import IconButton from 'components/IconButton';
 import {
+  addToShoppingList,
   getRecipeDetails,
   likeRecipe,
   unlikeRecipe,
@@ -43,15 +42,15 @@ import {findNumbersRegexp} from 'helpers/regexp';
 const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
   const {id, image, name} = route.params;
 
-  const [favourite, setFavourite] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [recipeDetails, setRecipeDetails] = useState<Partial<RecipeDetails>>();
   const [editMode, setEditMode] = useState<boolean>(false);
 
   const [servings, setServings] = useState<number>(0);
   const [weigthedIngredients, setWeightedIngredients] = useState<string[]>();
-  const {user} = useUserContext();
+  const {user, userData, refreshUserData} = useUserContext();
 
+  const favourite = userData?.recipes?.favourites?.includes(id) ?? false;
   const [imageEdit, setImageEdit] = useState<ImagePicker>();
   const [nameEdit, setNameEdit] = useState<string>(name);
   const [areaEdit, setAreaEdit] = useState<string>();
@@ -65,13 +64,13 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
   const imTheAuthor =
     user && recipeDetails ? user.uid === recipeDetails.author : false;
 
-  const handleHeart = () => {
-    setFavourite(fav => {
-      const newFav = !fav;
-      if (newFav) likeRecipe(user!.uid, id);
-      if (newFav) unlikeRecipe(user!.uid, id);
-      return newFav;
-    });
+  const like = async () => {
+    await likeRecipe(user!.uid, id);
+    refreshUserData();
+  };
+  const unlike = async () => {
+    await unlikeRecipe(user!.uid, id);
+    refreshUserData();
   };
 
   const handleEdit = () => {
@@ -129,6 +128,20 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
         } else tmp.push(name);
       }
       setWeightedIngredients(tmp);
+    }
+  };
+
+  const addIngredientsToList = async () => {
+    if (recipeDetails?.ingredients) {
+      const ingredients = recipeDetails.ingredients.map(i => ({
+        item: i.split(':')[0],
+      }));
+      await addToShoppingList(user!.uid, ingredients);
+      refreshUserData();
+      showMessage({
+        message: 'Ingredients added to shopping list',
+        type: 'success',
+      });
     }
   };
 
@@ -263,12 +276,12 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
-              onPress={handleHeart}
+              onPress={favourite ? unlike : like}
               className="p-2 rounded-full bg-white">
               <HeartIcon
                 size={hp(3.5)}
                 strokeWidth={4.5}
-                color={favourite ? 'red' : 'gray'}
+                color={favourite ? colors.heart : 'gray'}
               />
             </TouchableOpacity>
           )}
@@ -421,6 +434,16 @@ const RecipeDetailsScreen = ({navigation, route}: RecipeDetailsScreenProps) => {
               ) : (
                 <Text>No ingredients</Text>
               )}
+            </View>
+            <View className="w-full flex items-center justify-center">
+              <TouchableOpacity
+                onPress={addIngredientsToList}
+                style={{borderColor: colors.cta}}
+                className="px-4 py-2 rounded-full border-2 bg-white flex flex-row items-center justify-center space-x-2">
+                <Text style={{color: colors.cta}} className="font-bold">
+                  Add to shopping list
+                </Text>
+              </TouchableOpacity>
             </View>
           </Animated.View>
           <Animated.View

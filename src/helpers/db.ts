@@ -6,13 +6,23 @@ import {
   recipesRef,
   userRecipes,
   userRef,
+  userShopping,
 } from 'config/firebase';
-import {ImagePicker, Recipe, RecipeDetails, User} from 'types';
+import {
+  ImagePicker,
+  Recipe,
+  RecipeDetails,
+  RecipeIngredients,
+  ShoppingItem,
+  User,
+} from 'types';
 
-export const getRecipes = async (category: string) => {
+export const getRecipes = async (category: string, onlyThese?: string[]) => {
   const q =
     category.toLowerCase() === 'all'
       ? recipesRef
+      : onlyThese && category.toLowerCase() === 'favourites'
+      ? recipesRef.where('id', 'in', onlyThese)
       : recipesRef.where('category', '==', category);
   const querySnapshot = await q.get();
   let docs: Recipe[] = [];
@@ -105,6 +115,52 @@ export const updateRecipe = async (
     );
 };
 
+export const addToShoppingList = async (
+  userId: string,
+  items: Partial<ShoppingItem>[],
+) => {
+  const shoppingDoc = userShopping(userId);
+  const snap = await shoppingDoc.get();
+  const now = new Date(Date.now()).getTime();
+  const transformed = items.map((i, k) => ({...i, datetime: now + k}));
+
+  if (snap.exists && snap.data())
+    await shoppingDoc.update({
+      list: firestore.FieldValue.arrayUnion(...transformed),
+    });
+  else await shoppingDoc.set({favourites: transformed});
+};
+
+export const checkShoppingList = async (
+  userId: string,
+  item: ShoppingItem,
+  check: boolean,
+) => {
+  const shoppingDoc = userShopping(userId);
+  const snap = await shoppingDoc.get();
+  const items = snap.data() as {list: ShoppingItem[]};
+  const transformed = items.list?.map(i =>
+    i.datetime === item.datetime ? {...i, checked: check} : i,
+  );
+
+  await shoppingDoc.update({
+    list: transformed,
+  });
+};
+
+export const removeFromShoppingList = async (
+  userId: string,
+  item: ShoppingItem,
+) => {
+  const shoppingDoc = userShopping(userId);
+  const snap = await shoppingDoc.get();
+
+  if (snap.exists)
+    await shoppingDoc.update({
+      list: firestore.FieldValue.arrayRemove(item),
+    });
+};
+
 export const likeRecipe = async (userId: string, recipeId: string) => {
   const recipesDoc = userRecipes(userId);
   const snap = await recipesDoc.get();
@@ -124,4 +180,33 @@ export const unlikeRecipe = async (userId: string, recipeId: string) => {
     await recipesDoc.update({
       favourites: firestore.FieldValue.arrayRemove(recipeId),
     });
+};
+
+export const getUserData = async (userId: string) => {
+  const recipesDoc = userRef(userId);
+  const snap = await recipesDoc.get();
+
+  const data: User = {
+    recipes: snap.docs[0].data(),
+    shopping: snap.docs[1].data(),
+  };
+
+  return data;
+};
+
+export const getAllRecipesIngredients = async () => {
+  const querySnapshot = await recipeRef.get();
+  let docs: RecipeIngredients[] = [];
+  for (let i = 0; i < querySnapshot.docs.length; i++) {
+    const doc = querySnapshot.docs[i];
+    const data = doc.data() as RecipeIngredients;
+    docs.push({
+      id: data.id,
+      name: data.name,
+      ingredients: data.ingredients,
+      image: data.image,
+      score: 0,
+    });
+  }
+  return docs;
 };

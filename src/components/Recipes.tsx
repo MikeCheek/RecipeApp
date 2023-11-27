@@ -1,16 +1,13 @@
 import {View, Text} from 'react-native';
 import React, {useEffect, useState} from 'react';
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
+import {hp, wp} from 'helpers/responsiveScreen';
 import {Recipe} from 'types';
 import RecipeCard from './RecipeCard';
 import MasonryList from 'reanimated-masonry-list';
 import {useAppDispatch, useAppSelector} from 'redux/hooks';
 import Loader from './Loader';
 import {useNavigation} from '@react-navigation/native';
-import {Navigation} from 'navigation/types';
+import {HomeNavigation} from 'navigation/types';
 import FilterBadge from './FilterBadge';
 import Areas from './Areas';
 import {removeDuplicates} from 'helpers/array';
@@ -26,7 +23,7 @@ interface RecipesProps {
 
 const Recipes = ({search, removeSearch}: RecipesProps) => {
   const {recipes, recipesLoading} = useAppSelector(state => state.recipes);
-  const navigation = useNavigation<Navigation>();
+  const navigation = useNavigation<HomeNavigation>();
   const [area, setArea] = useState<string>();
   const dispatch = useAppDispatch();
   const {active} = useCategoryContext();

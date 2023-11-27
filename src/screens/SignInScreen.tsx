@@ -3,16 +3,13 @@ import React, {useState} from 'react';
 import ScreenWrapper from 'components/ScreenWrapper';
 import {colors} from 'theme';
 import Loader from 'components/Loader';
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
+import {hp, wp} from 'helpers/responsiveScreen';
 import {showMessage} from 'react-native-flash-message';
 import CustomTextInput from 'components/CustomTextInput';
 import IconButton from 'components/IconButton';
 import {ChevronLeftIcon} from 'react-native-heroicons/solid';
 import {useNavigation} from '@react-navigation/native';
-import {Navigation} from 'navigation/types';
+import {RootNavigation} from 'navigation/types';
 import useUserContext from 'helpers/useUserContext';
 import auth from '@react-native-firebase/auth';
 import CustomButton from 'components/CustomButton';
@@ -24,7 +21,7 @@ const SignInScreen = () => {
 
   const {userLoading, setUserLoading} = useUserContext();
 
-  const navigation = useNavigation<Navigation>();
+  const navigation = useNavigation<RootNavigation>();
 
   const checkEmail = () => {
     if (email.match(emailRegexp)) return true;

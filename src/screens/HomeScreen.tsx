@@ -7,11 +7,6 @@ import {
   TextInput,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
-import {MagnifyingGlassIcon} from 'react-native-heroicons/outline';
 import Categories from 'components/Categories';
 import Recipes from 'components/Recipes';
 import {useAppDispatch} from 'redux/hooks';
@@ -20,23 +15,27 @@ import {colors} from 'theme';
 import {getRecipes} from 'helpers/db';
 import useUserContext from 'helpers/useUserContext';
 import useCategoryContext from 'helpers/useCategoryContext';
-import {removeDuplicates} from 'helpers/array';
-import NewsBanner from 'components/NewsBanner';
+import {hp} from 'helpers/responsiveScreen';
+import SearchBar from 'components/SearchBar';
 
 const HomeScreen = () => {
   const [clicked, setClicked] = useState<boolean>();
   const [search, setSearch] = useState<string>();
-  const [searchFocus, setSearchFocus] = useState<boolean>(false);
 
   const dispatch = useAppDispatch();
-  const {user} = useUserContext();
+  const {user, userData} = useUserContext();
   const {active, setActive} = useCategoryContext();
 
   const handleGetRecipes = async (category: string = 'Beef') => {
     dispatch(setRecipesLoading(true));
     dispatch(
       setRecipes(
-        await getRecipes(category),
+        await getRecipes(
+          category,
+          category.toLowerCase() === 'favourites'
+            ? userData?.recipes?.favourites
+            : undefined,
+        ),
         // data.meals.map(m => ({
         //   id: String(m.idMeal),
         //   name: m.strMeal,
@@ -60,7 +59,7 @@ const HomeScreen = () => {
       fetchData();
       setClicked(false);
     } else if (clicked) fetchData();
-  }, [active]);
+  }, [active, userData?.recipes?.favourites]);
 
   return (
     <View className="flex-1 bg-white relative">
@@ -86,25 +85,11 @@ const HomeScreen = () => {
             <Text style={{color: colors.yellow}}>delicious</Text> food
           </Text>
         </View>
-        <View className="mx-4 flex-row items-center rounded-full bg-black/5 px-[6px]">
-          <TextInput
-            placeholder={`Search among ${active.toLowerCase()} recipes`}
-            placeholderTextColor="gray"
-            style={[
-              {fontSize: hp(1.7)},
-              searchFocus ? {width: '100%'} : {width: 10},
-            ]}
-            className="flex-1 text-base mb-1 pl-3 tracking-wider"
-            value={search}
-            onChangeText={setSearch}
-            onFocus={() => setSearchFocus(true)}
-            enterKeyHint="search"
-            returnKeyLabel="search"
-          />
-          <View className="bg-white rounded-full p-3">
-            <MagnifyingGlassIcon size={hp(2.5)} strokeWidth={3} color="gray" />
-          </View>
-        </View>
+        <SearchBar
+          placeholder={`Search among ${active.toLowerCase()} recipes`}
+          value={search}
+          onChangeText={setSearch}
+        />
         <View>
           <Categories
             active={active}

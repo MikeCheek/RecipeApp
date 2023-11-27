@@ -1,8 +1,5 @@
 import {View, Text, TextInput} from 'react-native';
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
+import {hp, wp} from 'helpers/responsiveScreen';
 import React from 'react';
 import {colors} from 'theme';
 

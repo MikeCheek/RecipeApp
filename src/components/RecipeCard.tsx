@@ -1,21 +1,19 @@
-import {Text, Pressable} from 'react-native';
+import {Text, Pressable, Alert, View} from 'react-native';
 import React, {useState} from 'react';
 import {Recipe} from 'types';
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
+import {hp, wp} from 'helpers/responsiveScreen';
 import Animated, {BounceIn, FadeInDown} from 'react-native-reanimated';
-import {Navigation} from 'navigation/types';
+import {HomeNavigation} from 'navigation/types';
 import {colors} from 'theme';
 import IconButton from './IconButton';
 import {ArrowUturnLeftIcon, TrashIcon} from 'react-native-heroicons/outline';
 import useUserContext from 'helpers/useUserContext';
+import {HeartIcon} from 'react-native-heroicons/solid';
 
 interface RecipeCardProps {
   item: Recipe;
   index: number;
-  navigation: Navigation;
+  navigation: HomeNavigation;
   deleteAction: (id: string) => void;
 }
 
@@ -26,8 +24,26 @@ const RecipeCard = ({
   deleteAction,
 }: RecipeCardProps) => {
   const [showOptions, setShowOptions] = useState<boolean>(false);
-  const {user} = useUserContext();
+  const {user, userData} = useUserContext();
   const imTheAuthor = user && item ? user.uid === item.author : false;
+  const favourite = userData?.recipes?.favourites?.includes(item.id) ?? false;
+
+  const createAlert = () =>
+    Alert.alert(
+      'Are you sure?',
+      `Do you really want to cancel ${item.name} recipe? This action cannot be undone`,
+      [
+        {
+          text: 'No',
+          onPress: () => null,
+          style: 'cancel',
+          isPreferred: true,
+        },
+        {text: 'Yes', onPress: () => deleteAction(item.id)},
+      ],
+      {cancelable: true},
+    );
+
   return (
     <Animated.View
       entering={FadeInDown.delay(index * 100)
@@ -55,6 +71,8 @@ const RecipeCard = ({
             width: '100%',
             height: index % 3 == 0 ? hp(25) : hp(35),
             borderRadius: 35,
+            borderColor: colors.heart,
+            borderWidth: favourite ? 2 : 0,
           }}
         />
         <Text
@@ -76,6 +94,13 @@ const RecipeCard = ({
             )}
           </Text>
         ) : null}
+        {favourite ? (
+          <View
+            style={{right: index % 2 == 0 ? 16 : 10}}
+            className="absolute z-20 top-2 opacity-80">
+            <HeartIcon color={colors.heart} size={35} />
+          </View>
+        ) : null}
         {showOptions ? (
           <Animated.View
             entering={BounceIn.duration(600).springify().damping(12)}
@@ -89,10 +114,7 @@ const RecipeCard = ({
               Icon={ArrowUturnLeftIcon}
               onPress={() => setShowOptions(false)}
             />
-            <IconButton
-              Icon={TrashIcon}
-              onPress={() => deleteAction(item.id)}
-            />
+            <IconButton Icon={TrashIcon} onPress={createAlert} />
           </Animated.View>
         ) : null}
       </Pressable>

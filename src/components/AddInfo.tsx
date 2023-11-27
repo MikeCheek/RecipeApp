@@ -8,10 +8,7 @@ import {
   Square3Stack3DIcon,
   UsersIcon,
 } from 'react-native-heroicons/outline';
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
+import {hp, wp} from 'helpers/responsiveScreen';
 
 interface AddInfoProps {
   info: RecipeInfo;

@@ -2,10 +2,7 @@ import {View, Text} from 'react-native';
 import React from 'react';
 import Loader from './Loader';
 import {colors} from 'theme';
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
+import {hp, wp} from 'helpers/responsiveScreen';
 
 interface PageLoaderProps {
   visible: boolean;

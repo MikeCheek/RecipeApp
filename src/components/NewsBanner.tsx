@@ -1,10 +1,7 @@
 import {View, Text, Easing} from 'react-native';
 import React, {useEffect} from 'react';
 import remoteConfig from '@react-native-firebase/remote-config';
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
+import {hp, wp} from 'helpers/responsiveScreen';
 import {colors} from 'theme';
 import Animated, {
   useAnimatedStyle,

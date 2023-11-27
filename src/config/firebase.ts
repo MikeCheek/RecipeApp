@@ -3,6 +3,7 @@ import storage from '@react-native-firebase/storage';
 import messaging from '@react-native-firebase/messaging';
 
 export const userRef = (userId: string) => firestore().collection(userId);
+export const userShopping = (userId: string) => userRef(userId).doc('shopping');
 export const userRecipes = (userId: string) => userRef(userId).doc('recipes');
 export const userTokens = (userId: string) => userRef(userId).doc('tokens');
 export const recipesRef = firestore().collection('recipes');

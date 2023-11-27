@@ -17,6 +17,7 @@ export const colors = {
   navTab: style.white,
   navIcon: style.blue,
   navSpecialIcon: style.blue,
+  heart: style.red,
 };
 
 export const categoryBG: {[key: string]: string} = {

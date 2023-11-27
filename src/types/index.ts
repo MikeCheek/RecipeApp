@@ -21,8 +21,16 @@ export const mealData = [
   },
 ];
 
+export type ShoppingItem = {
+  item: string;
+  quantity?: string;
+  checked?: boolean;
+  datetime: number;
+};
+
 export type User = {
-  liked: boolean[];
+  recipes?: {favourites?: string[]};
+  shopping?: {list?: ShoppingItem[]};
 };
 
 export type RecipeInfo = {
@@ -35,7 +43,7 @@ export type RecipeInfo = {
 export type Category = {
   id: string;
   name: string;
-  image: string | number;
+  image?: string | number;
   description: string;
 };
 
@@ -150,4 +158,12 @@ export type RecipeDetailsAPI = {
 export type ImagePicker = {
   image: string | undefined;
   imageType: string | undefined;
+};
+
+export type RecipeIngredients = {
+  id: string;
+  name: string;
+  ingredients: string[];
+  image: string;
+  score: number;
 };

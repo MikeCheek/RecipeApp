@@ -2,10 +2,7 @@ import {View, Text, StatusBar, TouchableOpacity} from 'react-native';
 import React, {useState} from 'react';
 import ScreenWrapper from 'components/ScreenWrapper';
 import Animated, {FadeInDown} from 'react-native-reanimated';
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
+import {hp, wp} from 'helpers/responsiveScreen';
 import CustomTextInput from 'components/CustomTextInput';
 import {colors} from 'theme';
 import Categories from 'components/Categories';

@@ -1,28 +1,25 @@
 import {View, Text, StatusBar, Image, TouchableOpacity} from 'react-native';
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
+import {hp, wp} from 'helpers/responsiveScreen';
 import React, {useEffect} from 'react';
 import Animated, {useSharedValue, withSpring} from 'react-native-reanimated';
 import {useNavigation} from '@react-navigation/native';
-import {Navigation} from 'navigation/types';
+import {RootNavigation} from 'navigation/types';
 import {useAppDispatch} from 'redux/hooks';
 import {setCategories, setCategoriesLoading} from 'redux/slices/categories';
 import {setRecipes, setRecipesLoading} from 'redux/slices/recipes';
 import {fetchCategories} from 'helpers/fetchers';
 import {getRecipes} from 'helpers/db';
 import useUserContext from 'helpers/useUserContext';
-import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
+import auth from '@react-native-firebase/auth';
 import CustomButton from 'components/CustomButton';
 
 const WelcomeScreen = () => {
   const ring1Padding = useSharedValue(0);
   const ring2Padding = useSharedValue(0);
 
-  const navigation = useNavigation<Navigation>();
+  const navigation = useNavigation<RootNavigation>();
 
-  const {user, cacheChecked} = useUserContext();
+  const {user, cacheChecked, userData} = useUserContext();
 
   const dispatch = useAppDispatch();
 
@@ -32,7 +29,12 @@ const WelcomeScreen = () => {
     dispatch(
       setCategories([
         {
-          id: '00000000',
+          id: '000000000',
+          name: 'Favourites',
+          description: 'All favourites',
+        },
+        {
+          id: '000000001',
           name: 'All',
           image: require('assets/images/welcome.png'),
           description: 'All meals',
@@ -50,7 +52,12 @@ const WelcomeScreen = () => {
 
   const handleGetRecipes = async (category: string = 'Beef') => {
     dispatch(setRecipesLoading(true));
-    const data = await getRecipes(category);
+    const data = await getRecipes(
+      category,
+      category.toLowerCase() === 'favourites'
+        ? userData?.recipes?.favourites
+        : undefined,
+    );
     dispatch(
       setRecipes(
         data,

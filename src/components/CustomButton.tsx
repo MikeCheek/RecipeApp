@@ -1,10 +1,7 @@
 import {Text, TouchableOpacity} from 'react-native';
 import React from 'react';
 import {colors} from 'theme';
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
+import {hp, wp} from 'helpers/responsiveScreen';
 
 interface CustomButtonProps {
   secondary?: boolean;
